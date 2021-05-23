@@ -30,7 +30,7 @@ class DatasetInstance_OurAerial(object):
         self.settings = settings
         self.dataLoader = dataLoader
         self.debugger = Debugger.Debugger(settings)
-        self.DEBUG_TURN_OFF_BALANCING = False
+        self.DEBUG_TURN_OFF_BALANCING = True
 
         self.variant = variant # 256 = 256x256, 112 = 112x112
 
