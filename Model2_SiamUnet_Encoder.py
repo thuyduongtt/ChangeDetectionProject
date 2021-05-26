@@ -6,7 +6,7 @@
 import Debugger
 # from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam
-from keras.utils import to_categorical
+from keras.utils.np_utils import to_categorical
 import numpy as np
 from random import randint
 
