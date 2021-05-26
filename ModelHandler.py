@@ -1,5 +1,6 @@
 import Model2_SiamUnet_Encoder
 
+
 class ModelHandler(object):
     """
     An intermediate between the code and bunch of tester models.

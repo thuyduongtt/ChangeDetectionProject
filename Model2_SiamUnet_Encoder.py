@@ -1,50 +1,28 @@
 # FORCE CPU
-#import os
-#os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-#os.environ["CUDA_VISIBLE_DEVICES"] = ""
+# import os
+# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+# os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-import Debugger, DataPreprocesser
-import keras
-from keras.layers import Input, Dense
-from keras.models import Model
-#from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
+import Debugger
+# from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam
 from keras.utils import to_categorical
 import numpy as np
 from random import randint
-
-from keras.layers import Conv2D
-from keras.layers import Activation
-from keras.models import Model
-
-from segmentation_models.utils import freeze_model
-from segmentation_models.utils import legacy_support
-from segmentation_models.backbones import get_backbone, get_feature_layers
-
-from segmentation_models.unet.blocks import Transpose2D_block
-from segmentation_models.utils import get_layer_number, to_tuple
 
 from loss_weighted_crossentropy import weighted_categorical_crossentropy
 from keras.callbacks import ModelCheckpoint
 
 from Model2_builder import SiameseUnet
 
-from albumentations import (PadIfNeeded,
-    HorizontalFlip,
-    VerticalFlip,
-    CenterCrop,
-    Crop,
-    Compose,
-    Transpose,
-    RandomRotate90,
-    ElasticTransform,
-    GridDistortion,
-    OpticalDistortion,
-    RandomSizedCrop,
-    OneOf,
-    CLAHE,
-    RandomBrightnessContrast,
-    RandomGamma)
+from albumentations import (HorizontalFlip,
+                            VerticalFlip,
+                            CenterCrop,
+                            Compose,
+                            GridDistortion,
+                            RandomBrightnessContrast,
+                            RandomGamma)
+
 
 class Model2_SiamUnet_Encoder(object):
     """
@@ -60,25 +38,25 @@ class Model2_SiamUnet_Encoder(object):
         self.use_sigmoid_or_softmax = 'softmax'
         assert self.use_sigmoid_or_softmax == 'softmax'
 
-        #BACKBONE = 'resnet34'
-        #BACKBONE = 'resnet50' #batch 16
-        #BACKBONE = 'resnet101' #batch 8
-        BACKBONE =  settings.model_backend
+        # BACKBONE = 'resnet34'
+        # BACKBONE = 'resnet50' #batch 16
+        # BACKBONE = 'resnet101' #batch 8
+        BACKBONE = settings.model_backend
         custom_weights_file = "imagenet"
 
-        #weights from imagenet finetuned on aerial data specific task - will it work? will it break?
-        #custom_weights_file = "/scratch/ruzicka/python_projects_large/AerialNet_VariousTasks/model_UNet-Resnet34_DSM_in01_95percOfTrain_8batch_100ep_dsm01proper.h5"
+        # weights from imagenet finetuned on aerial data specific task - will it work? will it break?
+        # custom_weights_file = "/scratch/ruzicka/python_projects_large/AerialNet_VariousTasks/model_UNet-Resnet34_DSM_in01_95percOfTrain_8batch_100ep_dsm01proper.h5"
 
-        #resolution_of_input = self.dataset.datasetInstance.IMAGE_RESOLUTION
+        # resolution_of_input = self.dataset.datasetInstance.IMAGE_RESOLUTION
         resolution_of_input = None
-        self.model = self.create_model(backbone=BACKBONE, custom_weights_file=custom_weights_file, input_size = resolution_of_input, channels = 3)
+        self.model = self.create_model(backbone=BACKBONE, custom_weights_file=custom_weights_file,
+                                       input_size=resolution_of_input, channels=3)
         self.model.summary()
 
-        self.local_setting_batch_size = settings.train_batch #8 #32
-        self.local_setting_epochs = settings.train_epochs #100
+        self.local_setting_batch_size = settings.train_batch  # 8 #32
+        self.local_setting_epochs = settings.train_epochs  # 100
 
         self.train_data_augmentation = True
-
 
         # saving paths for plots ...
         self.save_plot_path = "plots/"
@@ -91,10 +69,10 @@ class Model2_SiamUnet_Encoder(object):
 
         # 3 channels only - rgb
         if train_L.shape[3] > 3:
-            train_L = train_L[:,:,:,1:4]
-            train_R = train_R[:,:,:,1:4]
-            val_L = val_L[:,:,:,1:4]
-            val_R = val_R[:,:,:,1:4]
+            train_L = train_L[:, :, :, 1:4]
+            train_R = train_R[:, :, :, 1:4]
+            val_L = val_L[:, :, :, 1:4]
+            val_R = val_R[:, :, :, 1:4]
 
         # label also reshape
 
@@ -109,16 +87,21 @@ class Model2_SiamUnet_Encoder(object):
         class RandomRotate90x1(DualTransform):
             def apply(self, img, factor=0, **params):
                 return np.ascontiguousarray(np.rot90(img, factor))
+
             def get_params(self):
                 return {'factor': 1}
+
         class RandomRotate90x2(DualTransform):
             def apply(self, img, factor=0, **params):
                 return np.ascontiguousarray(np.rot90(img, factor))
+
             def get_params(self):
                 return {'factor': 2}
+
         class RandomRotate90x3(DualTransform):
             def apply(self, img, factor=0, **params):
                 return np.ascontiguousarray(np.rot90(img, factor))
+
             def get_params(self):
                 return {'factor': 3}
 
@@ -131,26 +114,27 @@ class Model2_SiamUnet_Encoder(object):
             train_V
 
             augmentations = []
-            augmentations.append( RandomRotate90x1(p=1) ) # 90, 180 or 270 <- we need the same for the same of l=r=y
-            augmentations.append( RandomRotate90x2(p=1) ) # 90, 180 or 270 <- we need the same for the same of l=r=y
-            augmentations.append( RandomRotate90x3(p=1) ) # 90, 180 or 270 <- we need the same for the same of l=r=y
-            augmentations.append( HorizontalFlip(p=1) )         # H reflection
-            augmentations.append( VerticalFlip(p=1) )           # V reflection
+            augmentations.append(RandomRotate90x1(p=1))  # 90, 180 or 270 <- we need the same for the same of l=r=y
+            augmentations.append(RandomRotate90x2(p=1))  # 90, 180 or 270 <- we need the same for the same of l=r=y
+            augmentations.append(RandomRotate90x3(p=1))  # 90, 180 or 270 <- we need the same for the same of l=r=y
+            augmentations.append(HorizontalFlip(p=1))  # H reflection
+            augmentations.append(VerticalFlip(p=1))  # V reflection
 
-            augmentations.append( Compose([VerticalFlip(p=1), RandomRotate90x1(p=1)]) ) # V reflection and then rotation
-            augmentations.append( Compose([HorizontalFlip(p=1), RandomRotate90x1(p=1)]) ) # H reflection and then rotation
+            augmentations.append(Compose([VerticalFlip(p=1), RandomRotate90x1(p=1)]))  # V reflection and then rotation
+            augmentations.append(
+                Compose([HorizontalFlip(p=1), RandomRotate90x1(p=1)]))  # H reflection and then rotation
 
             # randomness inside the call breaks our case because we need to call it twice (two images and a mask)
             # perhaps temporary concat in channels could be a workaround?
 
             # include non-rigid transformations?
             #   Elastic def. = “Best Practices for Convolutional Neural Networks applied to Visual Document Analysis”
-            #augmentations.append(ElasticTransformDET(p=1, alpha=120, sigma=120 * 0.05, alpha_affine=120 * 0.03))
+            # augmentations.append(ElasticTransformDET(p=1, alpha=120, sigma=120 * 0.05, alpha_affine=120 * 0.03))
 
             # more fancy ones ...
             # isn't deterministic for 3 images ....
-            #original_height = original_width = self.dataset.datasetInstance.IMAGE_RESOLUTION
-            #augmentations.append(RandomSizedCrop(p=1, min_max_height=(int(original_height/2.0), int(original_height)), height=original_height, width=original_width))
+            # original_height = original_width = self.dataset.datasetInstance.IMAGE_RESOLUTION
+            # augmentations.append(RandomSizedCrop(p=1, min_max_height=(int(original_height/2.0), int(original_height)), height=original_height, width=original_width))
 
             # etc ...
             aug_lefts = []
@@ -160,7 +144,7 @@ class Model2_SiamUnet_Encoder(object):
             num_in_train = len(train_L)
 
             for i in range(num_in_train):
-                #print(i)
+                # print(i)
 
                 image_l = train_L[i]
                 image_r = train_R[i]
@@ -168,9 +152,9 @@ class Model2_SiamUnet_Encoder(object):
 
                 if True:
                     # choose a random augmentation ... (we don't have mem for all of them!, solve by batches or smth ...)
-                    aug_i = randint(0, len(augmentations)-1)
+                    aug_i = randint(0, len(augmentations) - 1)
                     aug = augmentations[aug_i]
-                    #for aug in augmentations:
+                    # for aug in augmentations:
 
                     augmented1 = aug(image=image_l, mask=mask)
                     augmented2 = aug(image=image_r, mask=mask)
@@ -188,9 +172,10 @@ class Model2_SiamUnet_Encoder(object):
 
             if False:
                 # for sake of showing:
-                aug_lefts_tmp, aug_rights_tmp = self.dataPreprocesser.postprocess_images(np.asarray(aug_lefts), np.asarray(aug_rights))
+                aug_lefts_tmp, aug_rights_tmp = self.dataPreprocesser.postprocess_images(np.asarray(aug_lefts),
+                                                                                         np.asarray(aug_rights))
 
-                #self.debugger.viewTripples(aug_lefts, aug_rights, aug_ys)
+                # self.debugger.viewTripples(aug_lefts, aug_rights, aug_ys)
                 by = 5
                 off = i * by
                 while off < len(aug_lefts):
@@ -217,8 +202,6 @@ class Model2_SiamUnet_Encoder(object):
             print("label images categorical (aug train)")
             self.debugger.explore_set_stats(train_V)
 
-
-
         # don't do this before Augmentation
         train_V = train_V.reshape(train_V.shape + (1,))
         val_V = val_V.reshape(val_V.shape + (1,))
@@ -232,7 +215,7 @@ class Model2_SiamUnet_Encoder(object):
 
         checkpoint = ModelCheckpoint("model2best_so_far_for_eastly_stops.h5", monitor='val_categorical_accuracy',
                                      verbose=1, save_best_only=True, mode='max')
-        #callbacks = [checkpoint]  # should we prefer the best model instead?? maybe no, the val is pretty small
+        # callbacks = [checkpoint]  # should we prefer the best model instead?? maybe no, the val is pretty small
         callbacks = []
 
         # Regular training:
@@ -253,32 +236,32 @@ class Model2_SiamUnet_Encoder(object):
 
         print(history.history)
 
-
-        self.debugger.nice_plot_history(history,added_plots, save=save, show=show, name=self.save_plot_path+self.settings.run_name+"_training")
+        self.debugger.nice_plot_history(history, added_plots, save=save, show=show,
+                                        name=self.save_plot_path + self.settings.run_name + "_training")
 
     def save(self, path=""):
         if path == "":
-            self.model.save_weights(self.settings.large_file_folder+"last_trained_model_weights.h5")
+            self.model.save_weights(self.settings.large_file_folder + "last_trained_model_weights.h5")
         else:
             self.model.save_weights(path)
         print("Saved model weights.")
 
     def load(self, path=""):
         if path == "":
-            self.model.load_weights(self.settings.large_file_folder+"last_trained_model_weights.h5")
+            self.model.load_weights(self.settings.large_file_folder + "last_trained_model_weights.h5")
         else:
             self.model.load_weights(path)
         print("Loaded model weights.")
 
-    def test(self, evaluator, show = True, save = False, threshold_fineness = 0.1):
+    def test(self, evaluator, show=True, save=False, threshold_fineness=0.1):
         print("Test")
 
         test_L, test_R, test_V = self.dataset.test
 
         if test_L.shape[3] > 3:
             # 3 channels only - rgb
-            test_L = test_L[:,:,:,1:4]
-            test_R = test_R[:,:,:,1:4]
+            test_L = test_L[:, :, :, 1:4]
+            test_R = test_R[:, :, :, 1:4]
         # label also reshape
         if self.use_sigmoid_or_softmax == 'softmax':
             test_V_cat = to_categorical(test_V)
@@ -297,8 +280,8 @@ class Model2_SiamUnet_Encoder(object):
             # with just 2 classes I can hax:
             predicted = predicted[:, :, :, 1]
             # else:
-            #predicted = np.argmax(predicted, axis=3)
-            #print("predicted.shape:", predicted.shape)
+            # predicted = np.argmax(predicted, axis=3)
+            # print("predicted.shape:", predicted.shape)
 
         else:
             # chop off that last dimension
@@ -308,7 +291,10 @@ class Model2_SiamUnet_Encoder(object):
         predicted = self.dataPreprocesser.postprocess_labels(predicted)
 
         save_text_file = self.save_plot_path + kfold_txt + "_MASK_TXT.txt"
-        mask_best_thr, mask_recall, mask_precision, mask_accuracy, mask_f1 = evaluator.metrics_autothr_f1_max(predicted, test_V, jump_by = threshold_fineness, save_text_file=save_text_file)
+        mask_best_thr, mask_recall, mask_precision, mask_accuracy, mask_f1 = evaluator.metrics_autothr_f1_max(predicted,
+                                                                                                              test_V,
+                                                                                                              jump_by=threshold_fineness,
+                                                                                                              save_text_file=save_text_file)
         mask_stats = mask_best_thr, mask_recall, mask_precision, mask_accuracy, mask_f1
         tiles_stats = []
         print("Threshold automatically chosen as", mask_best_thr)
@@ -318,25 +304,28 @@ class Model2_SiamUnet_Encoder(object):
         if Tile_Based_Evaluation:
             chosen_threshold = mask_best_thr
             test_classlabels = evaluator.mask_label_into_class_label(self.dataset.test[2])
-            #test_classlabels = self.dataset.datasetInstance.mask_label_into_class_label(self.dataset.test[2])
+            # test_classlabels = self.dataset.datasetInstance.mask_label_into_class_label(self.dataset.test[2])
 
             # This has to actually be thresholded before we calculate the tile label (we have to count occurance of 1s)
-            predictions_thresholded, _, _, _, _= evaluator.calculate_metrics(predicted, test_V, threshold=chosen_threshold)
+            predictions_thresholded, _, _, _, _ = evaluator.calculate_metrics(predicted, test_V,
+                                                                              threshold=chosen_threshold)
             predicted_classlabels = self.dataset.datasetInstance.mask_label_into_class_label(predictions_thresholded)
 
             print(test_classlabels[0:20])
             print(predicted_classlabels[0:20])
 
             print("TILE based EVALUATION")
-            #evaluator.histogram_of_predictions(test_classlabels)
-            #evaluator.histogram_of_predictions(predicted_classlabels)
+            # evaluator.histogram_of_predictions(test_classlabels)
+            # evaluator.histogram_of_predictions(predicted_classlabels)
 
             # print("trying thresholds ...")
             # evaluator.try_all_thresholds(predicted_labels, test_class_Y, np.arange(0.0,1.0,0.01), title_txt="Labels (0/1) evaluated [Change Class]") #NoChange
 
-            print("threshold=",chosen_threshold)
-            save_text_file = self.save_plot_path+kfold_txt+"_TILES_TXT.txt"
-            _, tiles_recall, tiles_precision, tiles_accuracy, tiles_f1 = evaluator.calculate_metrics(predicted_classlabels, test_classlabels, threshold=chosen_threshold, save_text_file=save_text_file) # thr arbitrary no? we have only 0/1 in here already
+            print("threshold=", chosen_threshold)
+            save_text_file = self.save_plot_path + kfold_txt + "_TILES_TXT.txt"
+            _, tiles_recall, tiles_precision, tiles_accuracy, tiles_f1 = evaluator.calculate_metrics(
+                predicted_classlabels, test_classlabels, threshold=chosen_threshold,
+                save_text_file=save_text_file)  # thr arbitrary no? we have only 0/1 in here already
             tiles_stats = mask_best_thr, tiles_recall, tiles_precision, tiles_accuracy, tiles_f1
 
             # Get indices of the misclassified samples
@@ -345,13 +334,14 @@ class Model2_SiamUnet_Encoder(object):
 
             text_to_save_missclassifieds = ""
             print("misclassified_indices:", misclassified_indices)
-            text_to_save_missclassifieds += "misclassified_indices:"+str(misclassified_indices)+"\n"
+            text_to_save_missclassifieds += "misclassified_indices:" + str(misclassified_indices) + "\n"
             for ind in misclassified_indices:
-                #print("idx", ind, ":", predicted_classlabels[ind]," != ",test_classlabels[ind])
-                text_to_save_missclassifieds += "idx "+ str(ind)+ ": " +str( predicted_classlabels[ind])+" != "+str(test_classlabels[ind])+"\n"
+                # print("idx", ind, ":", predicted_classlabels[ind]," != ",test_classlabels[ind])
+                text_to_save_missclassifieds += "idx " + str(ind) + ": " + str(
+                    predicted_classlabels[ind]) + " != " + str(test_classlabels[ind]) + "\n"
 
             if save:
-                path = self.save_plot_path+"MissedIndices.txt"
+                path = self.save_plot_path + "MissedIndices.txt"
                 file = open(path, "w")
                 file.write(text_to_save_missclassifieds)
                 file.close()
@@ -360,9 +350,8 @@ class Model2_SiamUnet_Encoder(object):
 
         if test_L.shape[3] > 3:
             # 3 channels only - rgb
-            test_L = test_L[:,:,:,1:4]
-            test_R = test_R[:,:,:,1:4]
-
+            test_L = test_L[:, :, :, 1:4]
+            test_R = test_R[:, :, :, 1:4]
 
         print("left images (test)")
         self.debugger.explore_set_stats(test_L)
@@ -374,17 +363,20 @@ class Model2_SiamUnet_Encoder(object):
         self.debugger.explore_set_stats(predicted)
 
         if Tile_Based_Evaluation:
-            print("Misclassified samples (in total", len(misclassified_indices),"):")
+            print("Misclassified samples (in total", len(misclassified_indices), "):")
             if save:
                 off = 0
                 by = 4
                 by = min(by, len(misclassified_indices))
                 while off < len(misclassified_indices):
+                    by_rem = min(by, len(misclassified_indices) - off)
 
-                    by_rem = min(by, len(misclassified_indices)-off)
-
-                    #self.debugger.viewTripples(test_L, test_R, test_V, how_many=4, off=off)
-                    self.debugger.viewQuadrupples(test_L[misclassified_indices], test_R[misclassified_indices], test_V[misclassified_indices], predicted[misclassified_indices], how_many=by_rem, off=off, show=show,save=save, name=self.save_plot_path+kfold_txt+"quad"+str(off)+"_"+self.settings.run_name)
+                    # self.debugger.viewTripples(test_L, test_R, test_V, how_many=4, off=off)
+                    self.debugger.viewQuadrupples(test_L[misclassified_indices], test_R[misclassified_indices],
+                                                  test_V[misclassified_indices], predicted[misclassified_indices],
+                                                  how_many=by_rem, off=off, show=show, save=save,
+                                                  name=self.save_plot_path + kfold_txt + "quad" + str(
+                                                      off) + "_" + self.settings.run_name)
                     off += by
 
         if show:
@@ -392,28 +384,30 @@ class Model2_SiamUnet_Encoder(object):
             by = 4
             by = min(by, len(test_L))
             while off < len(predicted):
-                #self.debugger.viewTripples(test_L, test_R, test_V, how_many=4, off=off)
-                self.debugger.viewQuadrupples(test_L, test_R, test_V, predicted, how_many=by, off=off, show=show,save=save)
+                # self.debugger.viewTripples(test_L, test_R, test_V, how_many=4, off=off)
+                self.debugger.viewQuadrupples(test_L, test_R, test_V, predicted, how_many=by, off=off, show=show,
+                                              save=save)
                 off += by
         if save:
             off = 0
             by = 4
             by = min(by, len(test_L))
-            until_n = min(by*8, len(test_L))
+            until_n = min(by * 8, len(test_L))
             while off < until_n:
-                #self.debugger.viewTripples(test_L, test_R, test_V, how_many=4, off=off)
-                kfold_txt = self.settings.model_backend+"_KFold_" + str(self.settings.TestDataset_Fold_Index) + "z" + str(self.settings.TestDataset_K_Folds)
+                # self.debugger.viewTripples(test_L, test_R, test_V, how_many=4, off=off)
+                kfold_txt = self.settings.model_backend + "_KFold_" + str(
+                    self.settings.TestDataset_Fold_Index) + "z" + str(self.settings.TestDataset_K_Folds)
                 by_rem = min(by, until_n - off)
 
-                self.debugger.viewQuadrupples(test_L, test_R, test_V, predicted, how_many=by_rem, off=off, show=show,save=save, name=self.save_plot_path+kfold_txt+"quad"+str(off)+"_"+self.settings.run_name)
+                self.debugger.viewQuadrupples(test_L, test_R, test_V, predicted, how_many=by_rem, off=off, show=show,
+                                              save=save, name=self.save_plot_path + kfold_txt + "quad" + str(
+                        off) + "_" + self.settings.run_name)
                 off += by
 
         statistics = mask_stats, tiles_stats
         return statistics
 
-
-
-    def test_on_specially_loaded_set(self, evaluator, show = True, save = False):
+    def test_on_specially_loaded_set(self, evaluator, show=True, save=False):
         print("Test: Debug, showing performance on other loaded data!")
 
         path_to_image_left = "/home/pf/pfstaff/projects/ruzicka/TiledDataset_6368x6368px_large/2012_strip2_6368tiles/strip2-2012_0.PNG"
@@ -436,8 +430,8 @@ class Model2_SiamUnet_Encoder(object):
             return img[starty:starty + cropy, startx:startx + cropx, :]
 
         SMALLER_SIZE = 2048
-        image_left = crop_center(image_left, SMALLER_SIZE,SMALLER_SIZE)
-        image_right = crop_center(image_right, SMALLER_SIZE,SMALLER_SIZE)
+        image_left = crop_center(image_left, SMALLER_SIZE, SMALLER_SIZE)
+        image_right = crop_center(image_right, SMALLER_SIZE, SMALLER_SIZE)
 
         print("We have images of resolution:", image_left.shape, image_right.shape)
 
@@ -473,8 +467,8 @@ class Model2_SiamUnet_Encoder(object):
         print("Predicting now ...")
         test_L, test_R, test_V = test
         if test_L.shape[3] > 3:
-            test_L = test_L[:,:,:,1:4]
-            test_R = test_R[:,:,:,1:4]
+            test_L = test_L[:, :, :, 1:4]
+            test_R = test_R[:, :, :, 1:4]
 
         # OUCH MEMORY DIES FOR LARGE IMAGES - we will need to tile it ...
         predicted = self.model.predict(x=[test_L, test_R], batch_size=1)
@@ -487,9 +481,9 @@ class Model2_SiamUnet_Encoder(object):
         predicted = self.dataPreprocesser.postprocess_labels(predicted)
         test_L, test_R = self.dataPreprocesser.postprocess_images(test_L, test_R)
 
-        #test_L = test_L / 255.0
-        #test_R = test_R / 255.0
-        #predicted = predicted / 255.0
+        # test_L = test_L / 255.0
+        # test_R = test_R / 255.0
+        # predicted = predicted / 255.0
 
         print("test_L shape:", test_L.shape)
         print("test_R shape:", test_R.shape)
@@ -512,14 +506,13 @@ class Model2_SiamUnet_Encoder(object):
         by = 1
         by = min(by, len(test_L))
         while off < len(predicted):
-            #self.debugger.viewQuadrupples(predicted, predicted, predicted, predicted, how_many=by, off=off, show=show, save=save)
+            # self.debugger.viewQuadrupples(predicted, predicted, predicted, predicted, how_many=by, off=off, show=show, save=save)
             self.debugger.viewTripples(test_L, test_R, predicted, how_many=by, off=off)
             off += by
 
         print("TODO: Save as images ...")
 
-
-    def create_model(self, backbone='resnet34', custom_weights_file = "imagenet", input_size = 112, channels = 3):
+    def create_model(self, backbone='resnet34', custom_weights_file="imagenet", input_size=112, channels=3):
 
         model = SiameseUnet(backbone, encoder_weights=custom_weights_file, classes=2, activation='softmax',
                             input_shape=(input_size, input_size, channels), encoder_freeze=False)
@@ -538,4 +531,3 @@ class Model2_SiamUnet_Encoder(object):
         model.compile(optimizer=Adam(lr=0.00001), loss=loss, metrics=[metric, 'mse'])
 
         return model
-
