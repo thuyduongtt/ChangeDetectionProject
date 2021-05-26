@@ -1,14 +1,9 @@
-import Debugger
-
 import os
-from os import listdir
-from os.path import isfile, join
-import re
 import pickle
-import numpy as np
-from skimage import io
-from tqdm import tqdm
+
 import h5py
+
+import Debugger
 
 
 class DataLoader(object):

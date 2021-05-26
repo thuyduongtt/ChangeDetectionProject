@@ -1,5 +1,6 @@
-import matplotlib
 import os
+
+import matplotlib
 
 if not ('DISPLAY' in os.environ):
     matplotlib.use("Agg")

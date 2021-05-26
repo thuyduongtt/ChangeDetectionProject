@@ -1,14 +1,14 @@
 # === Initialize sets - Unlabeled, Train and Test
-import keras
-from ActiveLearning.LargeDatasetHandler_AL import get_balanced_dataset, get_unbalanced_dataset
-from ActiveLearning.LargeDatasetHandler_AL import LargeDatasetHandler_AL
-from ActiveLearning.ModelHandler_dataIndependent import ModelHandler_dataIndependent
+import os
+from datetime import *
+from timeit import default_timer as timer
+
 from ActiveLearning.DataPreprocesser_dataIndependent import DataPreprocesser_dataIndependent
+from ActiveLearning.LargeDatasetHandler_AL import LargeDatasetHandler_AL
+from ActiveLearning.LargeDatasetHandler_AL import get_unbalanced_dataset
+from ActiveLearning.ModelHandler_dataIndependent import ModelHandler_dataIndependent
 from ActiveLearning.TrainTestHandler import TrainTestHandler
 from Evaluator import Evaluator
-from timeit import default_timer as timer
-from datetime import *
-import os
 
 months = ["unk","jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"]
 month = (months[datetime.now().month])

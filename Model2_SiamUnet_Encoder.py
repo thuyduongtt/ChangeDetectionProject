@@ -3,25 +3,20 @@
 # os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
 # os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-import Debugger
+from random import randint
+
+import numpy as np
+from albumentations import (HorizontalFlip,
+                            VerticalFlip,
+                            Compose)
+from keras.callbacks import ModelCheckpoint
 # from keras.callbacks import EarlyStopping, ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam
 from keras.utils.np_utils import to_categorical
-import numpy as np
-from random import randint
 
-from loss_weighted_crossentropy import weighted_categorical_crossentropy
-from keras.callbacks import ModelCheckpoint
-
+import Debugger
 from Model2_builder import SiameseUnet
-
-from albumentations import (HorizontalFlip,
-                            VerticalFlip,
-                            CenterCrop,
-                            Compose,
-                            GridDistortion,
-                            RandomBrightnessContrast,
-                            RandomGamma)
+from loss_weighted_crossentropy import weighted_categorical_crossentropy
 
 
 class Model2_SiamUnet_Encoder(object):

@@ -1,11 +1,10 @@
-from multiprocessing.pool import ThreadPool
 from multiprocessing import Pool
-
-import numpy as np
 from timeit import default_timer as timer
+
 import cv2
+import numpy as np
 from skimage.transform import resize
-import os
+
 
 #pool = Pool(os.cpu_count() - 1)
 #pool = ThreadPool(4)

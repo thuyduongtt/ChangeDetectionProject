@@ -1,16 +1,13 @@
-import Debugger
-
-import os
 import random
-from os import listdir
-from os.path import isfile, join
 import re
-import pickle
+from os import listdir
+
+import matplotlib.pyplot as plt
 import numpy as np
 from skimage import io
 from tqdm import tqdm
-import h5py
-import matplotlib.pyplot as plt
+
+import Debugger
 
 
 class DatasetInstance_OurAerial(object):
